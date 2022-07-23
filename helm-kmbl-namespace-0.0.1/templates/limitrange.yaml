@@ -1,0 +1,17 @@
+{{- range .Values.namespaces }}
+---
+apiVersion: "v1"
+kind: "LimitRange"
+metadata:
+  name: "resource-limits"
+  namespace: {{ .name }}
+spec:
+  limits:
+    - type: "Container"
+      default:
+        cpu: {{ .limitrange_defaultCpu | default "300m" }}
+        memory: {{ .limitrange_defaultMemory | default "200Mi" }}
+      defaultRequest:
+        cpu: {{ .limitrange_defaultRequestCpu | default "200m" }}
+        memory: {{ .limitrange_defaultRequestMemory | default "100Mi" }}
+{{- end }}

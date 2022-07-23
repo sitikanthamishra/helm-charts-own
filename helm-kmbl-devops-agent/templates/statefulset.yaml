@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: devops-agent
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: devops-agent # has to match .spec.template.metadata.labels
+  serviceName: "devops-agent"
+  replicas: {{ .Values.statefulset.replicaCount }} # by default is 1
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: devops-agent # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      {{- if .Values.serviceaccount.create }}
+      serviceAccountName: "devops-agent"
+      {{- end }}
+      containers:
+      - name: devops-agent
+        image: "{{- include "app.image" .}}"
+        securityContext:
+            {{- toYaml .Values.statefulset.securityContext | nindent 12 }}
+        resources:
+            {{- toYaml .Values.statefulset.resources | nindent 12 }}
+        {{- if .Values.statefulset.envFrom }}
+        envFrom:
+            {{- toYaml .Values.statefulset.envFrom | nindent 12 }}
+        {{- end}}
+        volumeMounts:
+        - name: m2
+          mountPath: /root/.m2
+        - name: npm
+          mountPath: /root/.npm
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+          readOnly: false
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: "/var/run/docker.sock"
+  volumeClaimTemplates:
+  - metadata:
+      name: m2
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.storageclass }}
+      resources:
+        requests:
+          storage: 15Gi
+  - metadata:
+      name: npm
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.storageclass }}
+      resources:
+        requests:
+          storage: 15Gi
+

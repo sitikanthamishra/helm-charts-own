@@ -1,0 +1,14 @@
+{{- range .Values.namespaces }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: namespacequota
+  namespace: {{ .name }}
+spec:
+  hard:
+    requests.cpu: {{ .quota_requestsCpu | default "3" }}
+    requests.memory: {{ .quota_requestsMemory | default "10Gi" }}
+    limits.cpu: {{ .quota_limitsCpu | default "6" }}
+    limits.memory: {{ .quota_limitsMemory | default "12Gi" }}
+{{- end }}    
